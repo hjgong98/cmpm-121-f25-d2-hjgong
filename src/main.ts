@@ -43,3 +43,12 @@ canvas.addEventListener("mouseup", () => {
 canvas.addEventListener("mouseout", () => {
   isDrawing = false;
 });
+
+// clear canvas button
+const clearBtn = document.createElement("button");
+clearBtn.textContent = "Clear Canvas";
+document.body.appendChild(clearBtn);
+
+clearBtn.addEventListener("click", () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+});
