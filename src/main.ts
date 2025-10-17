@@ -1,6 +1,11 @@
-import exampleIconUrl from "./noun-paperclip-7598668-00449F.png";
-import "./style.css";
+// title
+const title = document.createElement('h1');
+title.textContent = 'Drawing Studio';
+document.body.appendChild(title);
 
-document.body.innerHTML = `
-  <p>Example image asset: <img src="${exampleIconUrl}" class="icon" /></p>
-`;
+// create canvas
+const canvas = document.createElement('canvas');
+canvas.width = 256;
+canvas.height = 256;
+canvas.id = 'drawing-canvas';
+document.body.appendChild(canvas);
