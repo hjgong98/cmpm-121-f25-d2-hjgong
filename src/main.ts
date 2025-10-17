@@ -21,6 +21,7 @@ type Point = { x: number; y: number };
 let displayList: Point[][] = [];
 let currentStroke: Point[] = [];
 let isDrawing = false;
+const redoStack: Point[][] = [];
 
 // clear button
 const clearBtn = document.createElement("button");
@@ -31,6 +32,22 @@ clearBtn.addEventListener("click", () => {
   displayList = [];
   currentStroke = [];
   dispatchDrawingChanged();
+});
+
+// undo button
+const undoBtn = document.createElement("button");
+undoBtn.textContent = "↩️ Undo";
+document.body.appendChild(undoBtn);
+
+undoBtn.addEventListener("click", () => {
+  if (displayList.length > 0) {
+    // remove last stroke from display list
+    const lastStroke = displayList.pop()!;
+    // add to redo stack so it can be brought back
+    redoStack.push(lastStroke);
+    // trigger redraw
+    dispatchDrawingChanged();
+  }
 });
 
 // mouse event handlers
