@@ -3,12 +3,22 @@ const title = document.createElement("h1");
 title.textContent = "Drawing Studio";
 document.body.appendChild(title);
 
+// clear button (above canvas)
+const clearBtn = document.createElement("button");
+clearBtn.textContent = "🗑️ Clear Canvas";
+document.body.appendChild(clearBtn);
+
+// canvas wrapper (to keep everything together)
+const canvasContainer = document.createElement("div");
+canvasContainer.id = "canvas-container";
+document.body.appendChild(canvasContainer);
+
 // canvas
 const canvas = document.createElement("canvas");
 canvas.width = 256;
 canvas.height = 256;
 canvas.id = "drawing-canvas";
-document.body.appendChild(canvas);
+canvasContainer.appendChild(canvas); // inside container
 
 // drawing context
 const ctx = canvas.getContext("2d")!;
@@ -23,22 +33,26 @@ let currentStroke: Point[] = [];
 let isDrawing = false;
 let redoStack: Point[][] = [];
 
-// clear button
-const clearBtn = document.createElement("button");
-clearBtn.textContent = "🗑️ Clear Canvas";
-document.body.appendChild(clearBtn);
+// undo button
+const undoBtn = document.createElement("button");
+undoBtn.textContent = "↩️ Undo";
+undoBtn.id = "btn-undo";
+canvasContainer.appendChild(undoBtn); // positioned absolutely
 
+// redo button
+const redoBtn = document.createElement("button");
+redoBtn.textContent = "↪️ Redo";
+redoBtn.id = "btn-redo";
+canvasContainer.appendChild(redoBtn); // positioned absolutely
+
+// clear button event
 clearBtn.addEventListener("click", () => {
   displayList = [];
   currentStroke = [];
   dispatchDrawingChanged();
 });
 
-// undo button
-const undoBtn = document.createElement("button");
-undoBtn.textContent = "↩️ Undo";
-document.body.appendChild(undoBtn);
-
+// undo button event
 undoBtn.addEventListener("click", () => {
   if (displayList.length > 0) {
     // remove last stroke from display list
@@ -50,11 +64,7 @@ undoBtn.addEventListener("click", () => {
   }
 });
 
-// redo button
-const redoBtn = document.createElement("button");
-redoBtn.textContent = "↪️ Redo";
-document.body.appendChild(redoBtn);
-
+// redo button event
 redoBtn.addEventListener("click", () => {
   if (redoStack.length > 0) {
     // take most recent stroke from redostack and push to displaylist
@@ -117,7 +127,7 @@ canvas.addEventListener("drawing-changed", redraw);
 function redraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // draw all strokes
+  // draw all completed strokes
   displayList.forEach((stroke) => {
     if (stroke.length < 2) return;
     ctx.beginPath();
@@ -128,7 +138,7 @@ function redraw() {
     ctx.stroke();
   });
 
-  // draw in progress stroke
+  // draw current in-progress stroke
   if (currentStroke.length >= 2) {
     ctx.beginPath();
     ctx.moveTo(currentStroke[0].x, currentStroke[0].y);

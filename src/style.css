@@ -1,14 +1,8 @@
-#drawing-canvas {
-  border: 1px solid black;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  margin: 16px 0;
-}
-
 h1 {
   text-align: center;
   color: #5a3e9d;
   font-family: "Segoe UI", sans-serif;
+  margin: 0 0 16px 0;
 }
 
 body {
@@ -17,4 +11,70 @@ body {
   align-items: center;
   padding: 20px;
   background-color: #f9f9fb;
+  margin: 0;
+  font-family: sans-serif;
+  gap: 24px;
+}
+
+#clearBtn {
+  padding: 8px 16px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  background: #f0f0f0;
+  border-radius: 6px;
+  cursor: pointer;
+  align-self: center;
+  width: fit-content;
+}
+
+#clearBtn:hover {
+  background: #e0e0e0;
+}
+
+#canvas-container {
+  position: relative;
+  width: 256px;
+}
+
+#drawing-canvas {
+  border: 1px solid black;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: block;
+  margin: 0 auto;
+}
+
+#btn-undo, #btn-redo {
+  position: absolute;
+  bottom: -36px;
+  padding: 5px 10px;
+  font-size: 13px;
+  border: 1px solid #aaa;
+  background: #f8f8f8;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  width: auto;
+  min-width: auto;
+  font-family: sans-serif;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#btn-undo {
+  right: 0;
+}
+
+#btn-redo {
+  left: 0;
+}
+
+#btn-undo:hover,
+#btn-redo:hover {
+  background: #e0e0e0;
+  transform: translateY(-1px);
+  transition: all 0.1s ease;
+}
+
+#canvas-container {
+  padding-bottom: 16px;
 }
