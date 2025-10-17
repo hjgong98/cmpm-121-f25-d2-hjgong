@@ -21,7 +21,7 @@ type Point = { x: number; y: number };
 let displayList: Point[][] = [];
 let currentStroke: Point[] = [];
 let isDrawing = false;
-const redoStack: Point[][] = [];
+let redoStack: Point[][] = [];
 
 // clear button
 const clearBtn = document.createElement("button");
@@ -50,6 +50,21 @@ undoBtn.addEventListener("click", () => {
   }
 });
 
+// redo button
+const redoBtn = document.createElement("button");
+redoBtn.textContent = "↪️ Redo";
+document.body.appendChild(redoBtn);
+
+redoBtn.addEventListener("click", () => {
+  if (redoStack.length > 0) {
+    // take most recent stroke from redostack and push to displaylist
+    const stroke = redoStack.pop()!;
+    displayList.push(stroke);
+    // redraw
+    dispatchDrawingChanged();
+  }
+});
+
 // mouse event handlers
 
 // start a new stroke
@@ -72,12 +87,12 @@ canvas.addEventListener("mousemove", (e) => {
 // end current stroke
 canvas.addEventListener("mouseup", () => {
   if (isDrawing && currentStroke.length > 0) {
-    // save finished stroke
     displayList.push([...currentStroke]);
+    redoStack = [];
+    dispatchDrawingChanged();
   }
   currentStroke = [];
   isDrawing = false;
-  dispatchDrawingChanged();
 });
 
 // mouse leaves canvas
