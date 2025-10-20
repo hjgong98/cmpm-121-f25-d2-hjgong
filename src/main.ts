@@ -3,6 +3,13 @@ const title = document.createElement("h1");
 title.textContent = "Drawing Studio";
 document.body.appendChild(title);
 
+// declare custom event so typscript will stop complaining
+declare global {
+  interface HTMLElementEventMap {
+    "tool-moved": CustomEvent<{ x: number; y: number }>;
+  }
+}
+
 // tools
 const toolsDiv = document.createElement("div");
 toolsDiv.style.display = "flex";
@@ -51,6 +58,20 @@ document.body.appendChild(clearBtn);
 const canvasContainer = document.createElement("div");
 canvasContainer.id = "canvas-container";
 document.body.appendChild(canvasContainer);
+
+// tool moved
+canvasContainer.addEventListener("mousemove", (e) => {
+  if (isDrawing && currentStroke) {
+    currentStroke.drag(e.offsetX, e.offsetY);
+    dispatchDrawingChanged();
+  } else {
+    // not drawing
+    const event = new CustomEvent("tool-moved", {
+      detail: { x: e.offsetX, y: e.offsetY },
+    });
+    canvas.dispatchEvent(event);
+  }
+});
 
 // canvas
 const canvas = document.createElement("canvas");
@@ -107,12 +128,40 @@ class MarkerLine implements DrawCommand {
   }
 }
 
+// tool preview
+class ToolPreview implements DrawCommand {
+  private x: number;
+  private y: number;
+  private width: number;
+  private color: string;
+
+  constructor(x: number, y: number, width: number, color: string) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.color = color;
+  }
+
+  display(ctx: CanvasRenderingContext2D) {
+    ctx.save();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillStyle = this.color + "44"; // Slight transparency
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.width / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
 // types
 type Point = { x: number; y: number };
 
 // hold commands instead of points
 let displayList: MarkerLine[] = [];
 let currentStroke: MarkerLine | null = null;
+let toolPreview: ToolPreview | null = null;
 let isDrawing = false;
 let redoStack: MarkerLine[] = [];
 
@@ -190,6 +239,16 @@ canvas.addEventListener("mouseout", () => {
   }
 });
 
+// tool moved
+canvas.addEventListener(
+  "tool-moved",
+  (e: CustomEvent<{ x: number; y: number }>) => {
+    const { x, y } = e.detail;
+    toolPreview = new ToolPreview(x, y, currentTool.width, currentTool.color);
+    dispatchDrawingChanged();
+  },
+);
+
 // observer pattern: redraw when drawing changes
 function dispatchDrawingChanged() {
   canvas.dispatchEvent(new CustomEvent("drawing-changed"));
@@ -206,4 +265,7 @@ function redraw() {
 
   // draw current stroke
   currentStroke?.display(ctx);
+
+  // draw tool preview
+  if (!isDrawing && toolPreview) toolPreview.display(ctx);
 }
