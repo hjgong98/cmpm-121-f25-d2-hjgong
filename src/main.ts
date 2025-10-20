@@ -3,6 +3,45 @@ const title = document.createElement("h1");
 title.textContent = "Drawing Studio";
 document.body.appendChild(title);
 
+// tools
+const toolsDiv = document.createElement("div");
+toolsDiv.style.display = "flex";
+toolsDiv.style.gap = "8px";
+toolsDiv.style.justifyContent = "center";
+toolsDiv.style.marginBottom = "8px";
+document.body.appendChild(toolsDiv);
+
+const thinBtn = document.createElement("button");
+thinBtn.textContent = "Thin";
+thinBtn.classList.add("tool-btn");
+thinBtn.classList.add("selectedTool"); // thin is default
+toolsDiv.appendChild(thinBtn);
+
+const thickBtn = document.createElement("button");
+thickBtn.textContent = "Thick";
+thickBtn.classList.add("tool-btn");
+toolsDiv.appendChild(thickBtn);
+
+// track current tool
+type Tool = { width: number; color: string };
+let currentTool: Tool = { width: 4, color: "#5a3e9d" };
+
+// update tool on click
+function selectTool(tool: Tool, button: HTMLButtonElement) {
+  currentTool = tool;
+  // visual feedback
+  [thinBtn, thickBtn].forEach((btn) => btn.classList.remove("selectedTool"));
+  button.classList.add("selectedTool");
+}
+
+thinBtn.addEventListener("click", () => {
+  selectTool({ width: 4, color: "#5a3e9d" }, thinBtn);
+});
+
+thickBtn.addEventListener("click", () => {
+  selectTool({ width: 12, color: "#5a3e9d" }, thickBtn);
+});
+
 // clear button (above canvas)
 const clearBtn = document.createElement("button");
 clearBtn.textContent = "🗑️ Clear Canvas";
@@ -23,7 +62,6 @@ canvasContainer.appendChild(canvas);
 // drawing context
 const ctx = canvas.getContext("2d")!;
 ctx.lineCap = "round";
-ctx.lineWidth = 4;
 ctx.strokeStyle = "#5a3e9d";
 
 // interface
@@ -34,9 +72,18 @@ interface DrawCommand {
 // markerline command
 class MarkerLine implements DrawCommand {
   private points: Point[];
+  private width: number;
+  private color: string;
 
-  constructor(initialX: number, initialY: number) {
+  constructor(
+    initialX: number,
+    initialY: number,
+    width: number,
+    color: string,
+  ) {
     this.points = [{ x: initialX, y: initialY }];
+    this.width = width;
+    this.color = color;
   }
 
   drag(x: number, y: number) {
@@ -46,12 +93,17 @@ class MarkerLine implements DrawCommand {
   display(ctx: CanvasRenderingContext2D) {
     if (this.points.length < 2) return;
 
+    ctx.save(); // 🔐 Isolate style changes
+    ctx.lineWidth = this.width;
+    ctx.strokeStyle = this.color;
+    ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(this.points[0].x, this.points[0].y);
     for (let i = 1; i < this.points.length; i++) {
       ctx.lineTo(this.points[i].x, this.points[i].y);
     }
     ctx.stroke();
+    ctx.restore();
   }
 }
 
@@ -105,7 +157,12 @@ redoBtn.addEventListener("click", () => {
 // mouse event handlers
 canvas.addEventListener("mousedown", (e) => {
   isDrawing = true;
-  currentStroke = new MarkerLine(e.offsetX, e.offsetY);
+  currentStroke = new MarkerLine(
+    e.offsetX,
+    e.offsetY,
+    currentTool.width,
+    currentTool.color,
+  );
   dispatchDrawingChanged();
 });
 
