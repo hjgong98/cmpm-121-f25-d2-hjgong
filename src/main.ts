@@ -18,7 +18,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 256;
 canvas.height = 256;
 canvas.id = "drawing-canvas";
-canvasContainer.appendChild(canvas); // inside container
+canvasContainer.appendChild(canvas);
 
 // drawing context
 const ctx = canvas.getContext("2d")!;
@@ -26,40 +26,69 @@ ctx.lineCap = "round";
 ctx.lineWidth = 4;
 ctx.strokeStyle = "#5a3e9d";
 
-// display list and state
+// interface
+interface DrawCommand {
+  display(ctx: CanvasRenderingContext2D): void;
+}
+
+// markerline command
+class MarkerLine implements DrawCommand {
+  private points: Point[];
+
+  constructor(initialX: number, initialY: number) {
+    this.points = [{ x: initialX, y: initialY }];
+  }
+
+  drag(x: number, y: number) {
+    this.points.push({ x, y });
+  }
+
+  display(ctx: CanvasRenderingContext2D) {
+    if (this.points.length < 2) return;
+
+    ctx.beginPath();
+    ctx.moveTo(this.points[0].x, this.points[0].y);
+    for (let i = 1; i < this.points.length; i++) {
+      ctx.lineTo(this.points[i].x, this.points[i].y);
+    }
+    ctx.stroke();
+  }
+}
+
+// types
 type Point = { x: number; y: number };
-let displayList: Point[][] = [];
-let currentStroke: Point[] = [];
+
+// hold commands instead of points
+let displayList: MarkerLine[] = [];
+let currentStroke: MarkerLine | null = null;
 let isDrawing = false;
-let redoStack: Point[][] = [];
+let redoStack: MarkerLine[] = [];
 
 // undo button
 const undoBtn = document.createElement("button");
 undoBtn.textContent = "↩️ Undo";
 undoBtn.id = "btn-undo";
-canvasContainer.appendChild(undoBtn); // positioned absolutely
+canvasContainer.appendChild(undoBtn);
 
 // redo button
 const redoBtn = document.createElement("button");
 redoBtn.textContent = "↪️ Redo";
 redoBtn.id = "btn-redo";
-canvasContainer.appendChild(redoBtn); // positioned absolutely
+canvasContainer.appendChild(redoBtn);
 
 // clear button event
 clearBtn.addEventListener("click", () => {
   displayList = [];
-  currentStroke = [];
+  currentStroke = null;
+  redoStack = [];
   dispatchDrawingChanged();
 });
 
 // undo button event
 undoBtn.addEventListener("click", () => {
   if (displayList.length > 0) {
-    // remove last stroke from display list
     const lastStroke = displayList.pop()!;
-    // add to redo stack so it can be brought back
     redoStack.push(lastStroke);
-    // trigger redraw
     dispatchDrawingChanged();
   }
 });
@@ -67,58 +96,46 @@ undoBtn.addEventListener("click", () => {
 // redo button event
 redoBtn.addEventListener("click", () => {
   if (redoStack.length > 0) {
-    // take most recent stroke from redostack and push to displaylist
     const stroke = redoStack.pop()!;
     displayList.push(stroke);
-    // redraw
     dispatchDrawingChanged();
   }
 });
 
 // mouse event handlers
-
-// start a new stroke
 canvas.addEventListener("mousedown", (e) => {
   isDrawing = true;
-  // new stroke with current point
-  currentStroke = [{ x: e.offsetX, y: e.offsetY }];
+  currentStroke = new MarkerLine(e.offsetX, e.offsetY);
   dispatchDrawingChanged();
 });
 
-// extend current stroke
 canvas.addEventListener("mousemove", (e) => {
-  if (isDrawing) {
-    // add point
-    currentStroke.push({ x: e.offsetX, y: e.offsetY });
+  if (isDrawing && currentStroke) {
+    currentStroke.drag(e.offsetX, e.offsetY);
     dispatchDrawingChanged();
   }
 });
 
-// end current stroke
 canvas.addEventListener("mouseup", () => {
-  if (isDrawing && currentStroke.length > 0) {
-    displayList.push([...currentStroke]);
-    redoStack = [];
-    dispatchDrawingChanged();
+  if (isDrawing && currentStroke) {
+    displayList.push(currentStroke);
+    redoStack = []; // Clear redo stack on new action
   }
-  currentStroke = [];
+  currentStroke = null;
   isDrawing = false;
+  dispatchDrawingChanged();
 });
 
-// mouse leaves canvas
 canvas.addEventListener("mouseout", () => {
-  if (isDrawing && currentStroke.length > 0) {
-    currentStroke = [];
+  if (isDrawing) {
     isDrawing = false;
+    currentStroke = null;
   }
 });
 
-// observer pattern
-
-// drawing changed
+// observer pattern: redraw when drawing changes
 function dispatchDrawingChanged() {
-  const event = new CustomEvent("drawing-changed");
-  canvas.dispatchEvent(event);
+  canvas.dispatchEvent(new CustomEvent("drawing-changed"));
 }
 
 // listen for changes and redraw
@@ -127,24 +144,9 @@ canvas.addEventListener("drawing-changed", redraw);
 function redraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // draw all completed strokes
-  displayList.forEach((stroke) => {
-    if (stroke.length < 2) return;
-    ctx.beginPath();
-    ctx.moveTo(stroke[0].x, stroke[0].y);
-    for (let i = 1; i < stroke.length; i++) {
-      ctx.lineTo(stroke[i].x, stroke[i].y);
-    }
-    ctx.stroke();
-  });
+  // draw all strokes
+  displayList.forEach((stroke) => stroke.display(ctx));
 
-  // draw current in-progress stroke
-  if (currentStroke.length >= 2) {
-    ctx.beginPath();
-    ctx.moveTo(currentStroke[0].x, currentStroke[0].y);
-    for (let i = 1; i < currentStroke.length; i++) {
-      ctx.lineTo(currentStroke[i].x, currentStroke[i].y);
-    }
-    ctx.stroke();
-  }
+  // draw current stroke
+  currentStroke?.display(ctx);
 }
