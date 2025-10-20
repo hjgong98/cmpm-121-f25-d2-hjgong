@@ -78,3 +78,25 @@ body {
 #canvas-container {
   padding-bottom: 16px;
 }
+
+.tool-btn {
+  padding: 6px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  background: #f8f8f8;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 0 4px;
+  width: 80px;
+}
+
+.tool-btn:hover {
+  background: #e8e8e8;
+}
+
+.tool-btn.selectedTool {
+  background: #5a3e9d;
+  color: white;
+  border-color: #5a3e9d;
+  font-weight: bold;
+}
