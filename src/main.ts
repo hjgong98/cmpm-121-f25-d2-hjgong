@@ -94,39 +94,111 @@ canvas.style.borderRadius = "12px";
 canvas.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
 col1.appendChild(canvas);
 
-// sticker buttons
-const stickers = ["🎨", "✨", "🎮"];
-const stickerBtns: { emoji: string; button: HTMLButtonElement }[] = [];
+// base stickers
+const baseStickers = ["🎨", "✨", "🎮"];
+
+// user added sticers
+const customStickers: string[] = [];
+
+// combine all stickers
+const stickerButtons = new Map<string, HTMLButtonElement>();
 let selectedSticker: string | null = null;
 
-const stickerDiv = document.createElement("div");
-stickerDiv.style.display = "flex";
-stickerDiv.style.justifyContent = "space-between";
-stickerDiv.style.width = "100%";
-stickerDiv.style.gap = "6px";
-
-stickers.forEach((emoji) => {
+function createStickerButton(emoji: string, container: HTMLElement) {
   const btn = document.createElement("button");
   btn.textContent = emoji;
   btn.classList.add("tool-btn");
   btn.style.fontSize = "18px";
+  btn.style.height = "30px";
+  btn.style.padding = "0 8px";
+  btn.style.flex = "none";
   btn.title = `Place ${emoji}`;
-  stickerDiv.appendChild(btn);
 
   btn.addEventListener("click", () => {
+    // deselect all tools
     [thinBtn, thickBtn].forEach((b) => b.classList.remove("selectedTool"));
-    stickerBtns.forEach(({ button }) =>
-      button.classList.remove("selectedTool")
-    );
+    stickerButtons.forEach((b) => b.classList.remove("selectedTool"));
     btn.classList.add("selectedTool");
     selectedSticker = emoji;
     currentTool = null;
     dispatchToolChange();
   });
 
-  stickerBtns.push({ emoji, button: btn });
+  stickerButtons.set(emoji, btn);
+  container.appendChild(btn);
+}
+
+// base sticker buttons
+const stickerDiv = document.createElement("div");
+stickerDiv.style.display = "flex";
+stickerDiv.style.justifyContent = "space-between";
+stickerDiv.style.width = "100%";
+stickerDiv.style.gap = "6px";
+stickerDiv.style.marginBottom = "8px";
+
+baseStickers.forEach((emoji) => {
+  createStickerButton(emoji, stickerDiv);
 });
+
 col2.appendChild(stickerDiv);
+
+// custom stickers ui
+const customSection = document.createElement("div");
+customSection.style.display = "flex";
+customSection.style.flexDirection = "column";
+customSection.style.gap = "8px";
+customSection.style.width = "100%";
+
+const customHeader = document.createElement("div");
+customHeader.textContent = "Custom stickers:";
+customHeader.style.fontSize = "12px";
+customHeader.style.color = "#555";
+customHeader.style.fontWeight = "bold";
+
+const customContainer = document.createElement("div");
+customContainer.style.display = "flex";
+customContainer.style.flexWrap = "wrap";
+customContainer.style.gap = "6px";
+customContainer.style.width = "100%";
+
+customSection.appendChild(customHeader);
+customSection.appendChild(customContainer);
+
+col2.appendChild(customSection);
+
+const addButton = document.createElement("button");
+addButton.textContent = "+";
+addButton.style.fontSize = "14px";
+addButton.style.height = "30px";
+addButton.style.padding = "4px 8px";
+addButton.style.width = "fit-content";
+addButton.title = "Add custom emoji sticker";
+
+addButton.addEventListener("click", () => {
+  const input = prompt("Enter an emoji to use as a sticker:", "🔥");
+  if (input === null) return;
+  const emoji = input.trim();
+  if (!emoji) return;
+
+  if (customStickers.length >= 3) {
+    const confirm = globalThis.confirm(
+      `You already have 3 custom stickers. Remove the oldest one to make room for '${emoji}'?`,
+    );
+    if (!confirm) return;
+
+    const removed = customStickers.shift();
+    const btn = stickerButtons.get(removed!);
+    if (btn && btn.parentNode) {
+      btn.remove();
+      stickerButtons.delete(removed!);
+    }
+  }
+
+  customStickers.push(emoji);
+  createStickerButton(emoji, customContainer);
+});
+
+customSection.appendChild(addButton);
 
 const undoBtn = document.createElement("button");
 undoBtn.textContent = "↩️ Undo";
@@ -167,7 +239,7 @@ let currentTool: Tool | null = { width: 4, color: "#5a3e9d" };
 function selectMarker(tool: Tool, button: HTMLButtonElement) {
   [thinBtn, thickBtn].forEach((b) => b.classList.remove("selectedTool"));
 
-  stickerBtns.forEach(({ button }) => button.classList.remove("selectedTool"));
+  stickerButtons.forEach((button) => button.classList.remove("selectedTool"));
 
   button.classList.add("selectedTool");
   currentTool = tool;
