@@ -2,7 +2,10 @@ h1 {
   text-align: center;
   color: #5a3e9d;
   font-family: "Segoe UI", sans-serif;
-  margin: 0 0 16px 0;
+  margin: 0;
+  padding: 0;
+  height: 24px;
+  line-height: 1;
 }
 
 body {
@@ -17,27 +20,17 @@ body {
 }
 
 button {
-  padding: 8px 12px;
+  padding: 6px 12px;
   font-size: 14px;
   border: 1px solid #ccc;
   background: #f8f8f8;
   border-radius: 6px;
   cursor: pointer;
+  font-family: sans-serif;
 }
 
 button:hover {
   background: #e8e8e8;
-}
-
-#clearBtn {
-  align-self: center;
-  width: fit-content;
-}
-
-#canvas-container {
-  position: relative;
-  width: 256px;
-  text-align: center;
 }
 
 #drawing-canvas {
@@ -48,36 +41,6 @@ button:hover {
   margin: 0 auto;
 }
 
-#btn-undo, #btn-redo {
-  position: absolute;
-  bottom: -36px;
-  padding: 5px 10px;
-  font-size: 13px;
-  border: 1px solid #aaa;
-  background: #f8f8f8;
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-  font-family: sans-serif;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  min-width: 60px;
-}
-
-#btn-undo {
-  right: 0;
-}
-
-#btn-redo {
-  left: 0;
-}
-
-#btn-undo:hover,
-#btn-redo:hover {
-  background: #e0e0e0;
-  transform: translateY(-1px);
-  transition: all 0.1s ease;
-}
-
 .tool-btn {
   padding: 6px 12px;
   font-size: 14px;
@@ -85,6 +48,7 @@ button:hover {
   background: #f8f8f8;
   border-radius: 6px;
   cursor: pointer;
+  flex: 1;
 }
 
 .tool-btn:hover {
