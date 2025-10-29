@@ -13,27 +13,31 @@ body {
   background-color: #f9f9fb;
   margin: 0;
   font-family: sans-serif;
-  gap: 24px;
+  gap: 16px;
+}
+
+button {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  background: #f8f8f8;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #e8e8e8;
 }
 
 #clearBtn {
-  padding: 8px 16px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  background: #f0f0f0;
-  border-radius: 6px;
-  cursor: pointer;
   align-self: center;
   width: fit-content;
-}
-
-#clearBtn:hover {
-  background: #e0e0e0;
 }
 
 #canvas-container {
   position: relative;
   width: 256px;
+  text-align: center;
 }
 
 #drawing-canvas {
@@ -54,10 +58,9 @@ body {
   border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
-  width: auto;
-  min-width: auto;
   font-family: sans-serif;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-width: 60px;
 }
 
 #btn-undo {
@@ -75,10 +78,6 @@ body {
   transition: all 0.1s ease;
 }
 
-#canvas-container {
-  padding-bottom: 16px;
-}
-
 .tool-btn {
   padding: 6px 12px;
   font-size: 14px;
@@ -86,8 +85,6 @@ body {
   background: #f8f8f8;
   border-radius: 6px;
   cursor: pointer;
-  margin: 0 4px;
-  width: 80px;
 }
 
 .tool-btn:hover {
