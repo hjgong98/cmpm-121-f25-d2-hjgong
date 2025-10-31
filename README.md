@@ -14,10 +14,10 @@ step 8. multiple stickers
 
 step 9. custom stickers
 step 10. high resolution export
+-- cleaned up ui again - click draw to use marker, click on stickers to use stickers
 step 11. tune default parameters
 change thick thin marker to an adjustable bar
-chance stickers to emojis
-add a stickers section (figure out how to import pngs as stickers) and add an option to add customized stikers
+rename stickers section to emoji stickers and then make a png stickers section
 clean up ui
 step 12. give users more control
 change marker color to an rgb picker/hex code
