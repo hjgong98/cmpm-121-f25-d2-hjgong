@@ -57,14 +57,44 @@ clearBtn.style.fontFamily = "sans-serif";
 clearBtn.style.width = "100%";
 col1.appendChild(clearBtn);
 
-// placeholder
-const placeholderBtn = document.createElement("button");
-placeholderBtn.textContent = "➕";
-placeholderBtn.title = "Future feature";
-placeholderBtn.style.width = "100%";
-placeholderBtn.style.textAlign = "center";
-placeholderBtn.style.padding = "8px 0";
-col2.appendChild(placeholderBtn);
+// export button
+const exportBtn = document.createElement("button");
+exportBtn.textContent = "📤 Export (4×)";
+exportBtn.title = "Export drawing as 1024×1024 PNG";
+exportBtn.style.width = "100%";
+exportBtn.style.textAlign = "center";
+exportBtn.style.padding = "8px 0";
+exportBtn.style.fontSize = "14px";
+exportBtn.style.fontFamily = "sans-serif";
+exportBtn.style.cursor = "pointer";
+exportBtn.style.border = "1px solid #0a84ff";
+exportBtn.style.color = "#0a84ff";
+exportBtn.style.backgroundColor = "#f0f8ff";
+exportBtn.style.borderRadius = "6px";
+exportBtn.style.fontWeight = "500";
+col2.appendChild(exportBtn);
+
+// export logic
+exportBtn.addEventListener("click", () => {
+  // create temporary canvas
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = 1024; // 4x of 256
+  exportCanvas.height = 1024;
+  const exportCtx = exportCanvas.getContext("2d")!;
+
+  // scale up: 4x zoom
+  exportCtx.scale(4, 4);
+
+  // re-run all drawing commands (no previews, no currentStroke/sticker)
+  displayList.forEach((cmd) => cmd.display(exportCtx));
+
+  // convert to PNG and trigger download
+  exportCanvas.toDataURL("image/png");
+  const link = document.createElement("a");
+  link.download = "drawing-studio-export.png";
+  link.href = exportCanvas.toDataURL("image/png");
+  link.click();
+});
 
 const markerDiv = document.createElement("div");
 markerDiv.style.display = "flex";
