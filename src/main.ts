@@ -116,24 +116,101 @@ colorLabel.style.fontWeight = "bold";
 colorLabel.style.fontSize = "13px";
 colorLabel.style.color = "#333";
 colorLabel.style.margin = "16px 0 4px 0";
+col2.appendChild(colorLabel);
+
+const colorRow = document.createElement("div");
+colorRow.style.display = "flex";
+colorRow.style.gap = "4px";
+colorRow.style.width = "100%";
 
 const colorInput = document.createElement("input");
 colorInput.type = "text";
 colorInput.value = "#5a3e9d";
-colorInput.style.width = "100%";
+colorInput.style.flex = "1";
 colorInput.style.fontSize = "12px";
 colorInput.style.padding = "4px";
 colorInput.style.border = "1px solid #ccc";
 colorInput.style.borderRadius = "4px";
 
-colorInput.addEventListener("input", () => {
-  const color = colorInput.value.trim();
-  if (!color) return;
+const formatBtn = document.createElement("button");
+formatBtn.textContent = "RGBO";
+formatBtn.style.fontSize = "11px";
+formatBtn.style.width = "42px";
+formatBtn.style.padding = "0";
+formatBtn.style.border = "1px solid #ccc";
+formatBtn.style.borderRadius = "4px";
+formatBtn.style.backgroundColor = "#f9f9f9";
+formatBtn.style.cursor = "pointer";
+formatBtn.title = "Toggle HEX ↔ RGB";
+colorRow.appendChild(colorInput);
+colorRow.appendChild(formatBtn);
+col2.appendChild(colorRow);
+
+// internal state: always store as { r, g, b }
+let colorRGB = { r: 90, g: 62, b: 157 };
+
+// sync input to current format
+function syncColorInput() {
+  if (formatBtn.textContent === "RGBO") {
+    colorInput.value = `#${
+      [colorRGB.r, colorRGB.g, colorRGB.b]
+        .map((n) => n.toString(16).padStart(2, "0"))
+        .join("")
+    }`;
+  } else {
+    colorInput.value = `rgb(${colorRGB.r}, ${colorRGB.g}, ${colorRGB.b})`;
+  }
+}
+
+// parse input and update internal color
+function parseColorInput() {
+  const val = colorInput.value.trim();
+
+  if (val.startsWith("#")) {
+    const hex = val.slice(1);
+    if (hex.length === 3) {
+      const [r, g, b] = hex.split("").map((c) => parseInt(c + c, 16));
+      colorRGB = { r, g, b };
+    } else if (hex.length === 6) {
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      colorRGB = { r, g, b };
+    }
+  } else if (val.startsWith("rgb")) {
+    const match = val.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+    if (match) {
+      const [, r, g, b] = match.map(Number);
+      if ([r, g, b].every((n) => n >= 0 && n <= 255)) {
+        colorRGB = { r, g, b };
+      }
+    }
+  }
+
+  // update current tool if active
   if (currentTool) {
-    currentTool.color = color;
+    currentTool.color = `rgb(${colorRGB.r}, ${colorRGB.g}, ${colorRGB.b})`;
     dispatchToolChange();
   }
+}
+
+// toggle format
+formatBtn.addEventListener("click", () => {
+  formatBtn.textContent = formatBtn.textContent === "RGBO" ? "HEX" : "RGBO";
+  syncColorInput();
 });
+
+// handle manual input
+colorInput.addEventListener("input", () => {
+  parseColorInput();
+  syncColorInput();
+});
+
+// handle input blur (in case user didn't trigger final update)
+colorInput.addEventListener("change", parseColorInput);
+
+// initialize display
+syncColorInput();
 
 col2.appendChild(colorLabel);
 col2.appendChild(colorInput);
