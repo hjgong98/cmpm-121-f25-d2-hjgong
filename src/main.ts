@@ -35,7 +35,7 @@ mainContainer.appendChild(col1);
 const col2 = document.createElement("div");
 col2.style.display = "flex";
 col2.style.flexDirection = "column";
-col2.style.gap = "2px";
+col2.style.gap = "4px";
 col2.style.width = "130px";
 mainContainer.appendChild(col2);
 
@@ -138,7 +138,7 @@ colorInput.addEventListener("input", () => {
 col2.appendChild(colorLabel);
 col2.appendChild(colorInput);
 
-// ✏️ Draw tool button (to re-enable marker after using sticker)
+// draw tool button (to re-enable marker after using sticker)
 const drawBtn = document.createElement("button");
 drawBtn.textContent = "✏️ Draw";
 drawBtn.style.padding = "6px 0";
@@ -165,7 +165,7 @@ drawBtn.addEventListener("click", () => {
 
 col2.appendChild(drawBtn);
 
-// Emoji Stickers Section
+// emoji Stickers Section
 const emojiHeader = document.createElement("div");
 emojiHeader.textContent = "Emoji Stickers:";
 emojiHeader.style.fontSize = "13px";
@@ -194,7 +194,7 @@ function createStickerButton(emoji: string, container: HTMLElement) {
   btn.style.cursor = "pointer";
 
   btn.addEventListener("click", () => {
-    // Deselect draw button and others
+    // deselect draw button and others
     drawBtn.classList.remove("selectedTool");
     stickerButtons.forEach((b) => b.classList.remove("selectedTool"));
     btn.classList.add("selectedTool");
@@ -211,7 +211,7 @@ const stickerDiv = document.createElement("div");
 stickerDiv.style.display = "flex";
 stickerDiv.style.justifyContent = "space-between";
 stickerDiv.style.width = "100%";
-stickerDiv.style.gap = "6px";
+stickerDiv.style.gap = "4px";
 stickerDiv.style.marginBottom = "8px";
 
 baseStickers.forEach((emoji) => {
@@ -220,11 +220,11 @@ baseStickers.forEach((emoji) => {
 
 col2.appendChild(stickerDiv);
 
-// Custom stickers UI
+// custom stickers UI
 const customSection = document.createElement("div");
 customSection.style.display = "flex";
 customSection.style.flexDirection = "column";
-customSection.style.gap = "8px";
+customSection.style.gap = "4px";
 customSection.style.width = "100%";
 
 const customHeader = document.createElement("div");
@@ -236,7 +236,7 @@ customHeader.style.fontWeight = "bold";
 const customContainer = document.createElement("div");
 customContainer.style.display = "flex";
 customContainer.style.flexWrap = "wrap";
-customContainer.style.gap = "6px";
+customContainer.style.gap = "4px";
 customContainer.style.width = "100%";
 
 customSection.appendChild(customHeader);
@@ -257,7 +257,7 @@ addButton.addEventListener("click", () => {
   if (!emoji) return;
   if (customStickers.length >= 3) {
     const confirm = globalThis.confirm(
-      `You already have 3 custom stickers. Remove the oldest one to make room for '${emoji}'?`
+      `You already have 3 custom stickers. Remove the oldest one to make room for '${emoji}'?`,
     );
     if (!confirm) return;
     const removed = customStickers.shift();
@@ -274,31 +274,96 @@ addButton.addEventListener("click", () => {
 customSection.appendChild(addButton);
 col2.appendChild(customSection);
 
-// PNG Stickers Section (Placeholder)
+// PNG stickers section
 const pngHeader = document.createElement("div");
 pngHeader.textContent = "PNG Stickers:";
 pngHeader.style.fontSize = "13px";
 pngHeader.style.color = "#333";
 pngHeader.style.fontWeight = "bold";
 pngHeader.style.marginTop = "16px";
+col2.appendChild(pngHeader);
 
 const pngContainer = document.createElement("div");
 pngContainer.style.display = "flex";
 pngContainer.style.flexWrap = "wrap";
-pngContainer.style.gap = "6px";
+pngContainer.style.gap = "4px";
 pngContainer.style.width = "100%";
-pngContainer.style.height = "60px";
+pngContainer.style.minHeight = "60px";
 pngContainer.style.border = "1px dashed #ccc";
 pngContainer.style.borderRadius = "6px";
 pngContainer.style.padding = "4px";
-pngContainer.style.fontSize = "10px";
-pngContainer.style.color = "#888";
-pngContainer.style.textAlign = "center";
-pngContainer.style.lineHeight = "50px";
-pngContainer.textContent = "Coming soon";
-
-col2.appendChild(pngHeader);
 col2.appendChild(pngContainer);
+
+// my stickers from discord :)
+const pngStickers = [
+  {
+    url: "https://cdn.discordapp.com/emojis/1433646344089763931.webp?size=240",
+    name: "pandasleep",
+  },
+  {
+    url: "https://cdn.discordapp.com/emojis/829062430205804624.webp?size=240",
+    name: "pandacheese",
+  },
+  {
+    url: "https://cdn.discordapp.com/emojis/828963398594461726.webp?size=240",
+    name: "pandacall",
+  },
+];
+
+// map to store preloaded images
+const stickerImages = new Map<string, HTMLImageElement>();
+
+// function to create a sticker button with thumbnail
+function createPngStickerButton(url: string, name: string) {
+  const btn = document.createElement("button");
+  btn.title = `Place ${name}`;
+  btn.style.width = "24px";
+  btn.style.height = "24px";
+  btn.style.padding = "0";
+  btn.style.border = "1px solid #aaa";
+  btn.style.borderRadius = "4px";
+  btn.style.backgroundColor = "#fff";
+  btn.style.cursor = "pointer";
+  btn.style.overflow = "hidden";
+
+  const img = new Image();
+  img.src = url;
+  img.style.width = "100%";
+  img.style.height = "100%";
+  img.style.objectFit = "contain";
+
+  btn.appendChild(img);
+
+  // preload and cache the image
+  img.onload = () => {
+    stickerImages.set(name, img);
+  };
+  img.onerror = () => {
+    console.warn(`Failed to load sticker: ${name}`);
+    btn.textContent = "⚠️";
+  };
+
+  btn.addEventListener("click", () => {
+    // deselect draw tool and emoji stickers
+    drawBtn.classList.remove("selectedTool");
+    stickerButtons.forEach((b) => b.classList.remove("selectedTool"));
+    pngContainer.querySelectorAll("button").forEach((b) =>
+      b.classList.remove("selectedTool")
+    );
+    btn.classList.add("selectedTool");
+
+    selectedSticker = name;
+    currentTool = null;
+    dispatchToolChange();
+  });
+
+  pngContainer.appendChild(btn);
+}
+
+// Create all PNG sticker buttons
+pngStickers.forEach((sticker) =>
+  createPngStickerButton(sticker.url, sticker.name)
+);
 
 // canvas
 const canvas = document.createElement("canvas");
@@ -344,7 +409,7 @@ undoRedoDiv.appendChild(undoBtn);
 
 col1.appendChild(undoRedoDiv);
 
-// Current tool state
+// current tool state
 type Tool = { width: number; color: string };
 let currentTool: Tool | null = { width: 4, color: "#5a3e9d" };
 
@@ -353,7 +418,7 @@ const ctx = canvas.getContext("2d")!;
 ctx.lineCap = "round";
 ctx.strokeStyle = "#5a3e9d";
 
-// Commands
+// commands
 interface DrawCommand {
   display(ctx: CanvasRenderingContext2D): void;
   drag?(x: number, y: number): void;
@@ -389,7 +454,7 @@ class ToolPreview implements DrawCommand {
     private x: number,
     private y: number,
     private width: number,
-    private color: string
+    private color: string,
   ) {}
   display(ctx: CanvasRenderingContext2D) {
     ctx.save();
@@ -405,33 +470,49 @@ class ToolPreview implements DrawCommand {
 }
 
 class StickerPreview implements DrawCommand {
-  constructor(private x: number, private y: number, private emoji: string) {}
+  constructor(private x: number, private y: number, private sticker: string) {} // sticker is name
   display(ctx: CanvasRenderingContext2D) {
-    ctx.save();
-    ctx.font = "bold 24px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.globalAlpha = 0.7;
-    ctx.fillText(this.emoji, this.x, this.y);
-    ctx.restore();
+    const img = stickerImages.get(this.sticker);
+    if (img) {
+      const size = 32;
+      ctx.save();
+      ctx.globalAlpha = 0.7;
+      ctx.drawImage(img, this.x - size / 2, this.y - size / 2, size, size);
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.font = "bold 24px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.globalAlpha = 0.7;
+      ctx.fillText("🧑‍🎨", this.x, this.y);
+      ctx.restore();
+    }
   }
 }
 
 class PlaceSticker implements DrawCommand {
-  constructor(private x: number, private y: number, private emoji: string) {}
+  constructor(private x: number, private y: number, private sticker: string) {} // now holds name
   drag(x: number, y: number) {
     this.x = x;
     this.y = y;
   }
   display(ctx: CanvasRenderingContext2D) {
-    ctx.font = "bold 24px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(this.emoji, this.x, this.y);
+    const img = stickerImages.get(this.sticker);
+    if (img) {
+      const size = 32;
+      ctx.drawImage(img, this.x - size / 2, this.y - size / 2, size, size);
+    } else {
+      // fallback if image fails
+      ctx.font = "bold 24px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🖼️", this.x, this.y);
+    }
   }
 }
 
-// Runtime state
+// runtime state
 let displayList: DrawCommand[] = [];
 let currentStroke: MarkerLine | null = null;
 let currentSticker: PlaceSticker | null = null;
@@ -461,7 +542,7 @@ function dispatchToolChange() {
   dispatchToolMove();
 }
 
-// Clear canvas
+// clear canvas
 clearBtn.addEventListener("click", () => {
   displayList = [];
   currentStroke = null;
@@ -472,7 +553,7 @@ clearBtn.addEventListener("click", () => {
   redraw();
 });
 
-// Undo
+// undo
 undoBtn.addEventListener("click", () => {
   if (displayList.length === 0) return;
   const last = displayList.pop()!;
@@ -480,7 +561,7 @@ undoBtn.addEventListener("click", () => {
   redraw();
 });
 
-// Redo
+// redo
 redoBtn.addEventListener("click", () => {
   if (redoStack.length === 0) return;
   const action = redoStack.pop()!;
@@ -488,7 +569,7 @@ redoBtn.addEventListener("click", () => {
   redraw();
 });
 
-// Drawing events
+// drawing events
 canvas.addEventListener("mousedown", (e) => {
   if (selectedSticker || !currentTool) return;
   isDrawing = true;
@@ -552,17 +633,25 @@ canvas.addEventListener("click", (e) => {
 });
 
 // tool preview
-canvas.addEventListener("tool-moved", (e: CustomEvent<{ x: number; y: number }>) => {
-  const { x, y } = e.detail;
-  if (selectedSticker) {
-    currentPreview = new StickerPreview(x, y, selectedSticker);
-  } else if (currentTool) {
-    currentPreview = new ToolPreview(x, y, currentTool.width, currentTool.color);
-  } else {
-    currentPreview = null;
-  }
-  redraw();
-});
+canvas.addEventListener(
+  "tool-moved",
+  (e: CustomEvent<{ x: number; y: number }>) => {
+    const { x, y } = e.detail;
+    if (selectedSticker) {
+      currentPreview = new StickerPreview(x, y, selectedSticker);
+    } else if (currentTool) {
+      currentPreview = new ToolPreview(
+        x,
+        y,
+        currentTool.width,
+        currentTool.color,
+      );
+    } else {
+      currentPreview = null;
+    }
+    redraw();
+  },
+);
 
 // redraw
 function redraw() {
