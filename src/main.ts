@@ -317,6 +317,7 @@ const stickerImages = new Map<string, HTMLImageElement>();
 function createPngStickerButton(url: string, name: string) {
   const btn = document.createElement("button");
   btn.title = `Place ${name}`;
+  btn.dataset.name = name;
   btn.style.width = "24px";
   btn.style.height = "24px";
   btn.style.padding = "0";
@@ -328,6 +329,7 @@ function createPngStickerButton(url: string, name: string) {
 
   const img = new Image();
   img.src = url;
+  img.crossOrigin = "anonymous";
   img.style.width = "100%";
   img.style.height = "100%";
   img.style.objectFit = "contain";
@@ -360,10 +362,125 @@ function createPngStickerButton(url: string, name: string) {
   pngContainer.appendChild(btn);
 }
 
-// Create all PNG sticker buttons
+// built in png sticker buttons
 pngStickers.forEach((sticker) =>
   createPngStickerButton(sticker.url, sticker.name)
 );
+
+// custom png input
+const customPngSection = document.createElement("div");
+customPngSection.style.marginTop = "8px";
+customPngSection.style.display = "flex";
+customPngSection.style.flexDirection = "column";
+customPngSection.style.gap = "4px";
+customPngSection.style.width = "100%";
+
+const customPngInput = document.createElement("input");
+customPngInput.type = "text";
+customPngInput.placeholder = "Sticker URL";
+customPngInput.style.fontSize = "12px";
+customPngInput.style.padding = "4px";
+customPngInput.style.border = "1px solid #ccc";
+customPngInput.style.borderRadius = "4px";
+customPngInput.style.width = "100%";
+
+const addPngBtn = document.createElement("button");
+addPngBtn.textContent = "+";
+addPngBtn.style.width = "100%";
+addPngBtn.style.padding = "2px 0";
+addPngBtn.style.fontSize = "12px";
+addPngBtn.style.border = "1px solid #0a84ff";
+addPngBtn.style.color = "#0a84ff";
+addPngBtn.style.backgroundColor = "#f0f8ff";
+addPngBtn.style.borderRadius = "4px";
+addPngBtn.style.cursor = "pointer";
+
+customPngSection.appendChild(customPngInput);
+customPngSection.appendChild(addPngBtn);
+col2.appendChild(customPngSection);
+
+// track custom user-added stickers
+type CustomPngSticker = { url: string; name: string; img: HTMLImageElement };
+const customPngStickers: CustomPngSticker[] = [];
+
+// helper: find image by name in built-in OR custom stickers
+function getStickerImage(name: string): HTMLImageElement | null {
+  if (stickerImages.has(name)) return stickerImages.get(name)!;
+  const found = customPngStickers.find((s) => s.name === name);
+  return found ? found.img : null;
+}
+
+addPngBtn.addEventListener("click", () => {
+  const url = customPngInput.value.trim();
+  if (!url) {
+    globalThis.alert("Please enter a URL");
+    return;
+  }
+  if (!/\.(png|webp|jpe?g|gif)$/i.test(url)) {
+    globalThis.alert("URL must end with .png, .webp, .jpg, .jpeg, or .gif");
+    return;
+  }
+
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  const name = url.split("/").pop()?.split("?")[0]?.substring(0, 10) ||
+    "custom";
+
+  img.onload = () => {
+    if (customPngStickers.length >= 3) {
+      const confirm = globalThis.confirm(
+        "3 custom stickers max. Replace oldest?",
+      );
+      if (!confirm) return;
+      const removed = customPngStickers.shift();
+      const btn = pngContainer.querySelector(`[data-name="${removed?.name}"]`);
+      if (btn) btn.remove();
+    }
+
+    const sticker: CustomPngSticker = { url, name, img };
+    customPngStickers.push(sticker);
+    createCustomPngButton(sticker);
+    customPngInput.value = "";
+  };
+
+  img.onerror = () =>
+    globalThis.alert("Failed to load image (CORS or broken link).");
+  img.src = url;
+});
+
+function createCustomPngButton(sticker: CustomPngSticker) {
+  const btn = document.createElement("button");
+  btn.title = `Place ${sticker.name}`;
+  btn.dataset.name = sticker.name;
+  btn.style.width = "24px";
+  btn.style.height = "24px";
+  btn.style.padding = "0";
+  btn.style.border = "1px solid #0a84ff";
+  btn.style.borderRadius = "4px";
+  btn.style.backgroundColor = "#fff";
+  btn.style.cursor = "pointer";
+  btn.style.overflow = "hidden";
+
+  const img = sticker.img;
+  img.style.width = "100%";
+  img.style.height = "100%";
+  img.style.objectFit = "contain";
+  btn.appendChild(img);
+
+  btn.addEventListener("click", () => {
+    drawBtn.classList.remove("selectedTool");
+    stickerButtons.forEach((b) => b.classList.remove("selectedTool"));
+    pngContainer.querySelectorAll("button").forEach((b) =>
+      b.classList.remove("selectedTool")
+    );
+    btn.classList.add("selectedTool");
+    selectedSticker = sticker.name;
+    currentTool = null;
+    dispatchToolChange();
+  });
+
+  pngContainer.appendChild(btn);
+}
 
 // canvas
 const canvas = document.createElement("canvas");
@@ -470,9 +587,9 @@ class ToolPreview implements DrawCommand {
 }
 
 class StickerPreview implements DrawCommand {
-  constructor(private x: number, private y: number, private sticker: string) {} // sticker is name
+  constructor(private x: number, private y: number, private sticker: string) {}
   display(ctx: CanvasRenderingContext2D) {
-    const img = stickerImages.get(this.sticker);
+    const img = getStickerImage(this.sticker);
     if (img) {
       const size = 32;
       ctx.save();
@@ -485,25 +602,24 @@ class StickerPreview implements DrawCommand {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.globalAlpha = 0.7;
-      ctx.fillText("🧑‍🎨", this.x, this.y);
+      ctx.fillText("🖼️", this.x, this.y);
       ctx.restore();
     }
   }
 }
 
 class PlaceSticker implements DrawCommand {
-  constructor(private x: number, private y: number, private sticker: string) {} // now holds name
+  constructor(private x: number, private y: number, private sticker: string) {}
   drag(x: number, y: number) {
     this.x = x;
     this.y = y;
   }
   display(ctx: CanvasRenderingContext2D) {
-    const img = stickerImages.get(this.sticker);
+    const img = getStickerImage(this.sticker);
     if (img) {
       const size = 32;
       ctx.drawImage(img, this.x - size / 2, this.y - size / 2, size, size);
     } else {
-      // fallback if image fails
       ctx.font = "bold 24px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -522,7 +638,7 @@ let redoStack: DrawCommand[] = [];
 let lastMouseX = 128;
 let lastMouseY = 128;
 
-// Mouse tracking
+// mouse tracking
 canvas.addEventListener("mousemove", (e) => {
   lastMouseX = e.offsetX;
   lastMouseY = e.offsetY;
