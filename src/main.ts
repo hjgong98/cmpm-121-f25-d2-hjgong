@@ -200,6 +200,32 @@ formatBtn.addEventListener("click", () => {
   syncColorInput();
 });
 
+exportBtn.addEventListener("click", () => {
+  const exportCanvas = document.createElement("canvas");
+  const exportCtx = exportCanvas.getContext("2d")!;
+  const scale = 4;
+  exportCanvas.width = 256 * scale;
+  exportCanvas.height = 256 * scale;
+  exportCtx.scale(scale, scale);
+  exportCtx.imageSmoothingEnabled = false;
+
+  // Redraw all commands on the larger canvas
+  displayList.forEach((cmd) => cmd.display(exportCtx));
+  currentStroke?.display(exportCtx);
+  currentSticker?.display(exportCtx);
+
+  // Convert to PNG and trigger download
+  exportCanvas.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "drawing-studio-export.png";
+    a.click();
+    URL.revokeObjectURL(url); // Clean up
+  }, "image/png");
+});
+
 // handle manual input
 colorInput.addEventListener("input", () => {
   parseColorInput();
@@ -673,34 +699,36 @@ class StickerPreview implements DrawCommand {
       ctx.globalAlpha = 0.7;
       ctx.drawImage(img, this.x - size / 2, this.y - size / 2, size, size);
       ctx.restore();
-    } else {
-      ctx.save();
-      ctx.font = "bold 24px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.globalAlpha = 0.7;
-      ctx.fillText("🖼️", this.x, this.y);
-      ctx.restore();
     }
   }
 }
 
 class PlaceSticker implements DrawCommand {
   constructor(private x: number, private y: number, private sticker: string) {}
+
   drag(x: number, y: number) {
     this.x = x;
     this.y = y;
   }
+
   display(ctx: CanvasRenderingContext2D) {
-    const img = getStickerImage(this.sticker);
-    if (img) {
-      const size = 32;
-      ctx.drawImage(img, this.x - size / 2, this.y - size / 2, size, size);
+    const isImageUrl = /\.(png|webp|jpe?g|gif)/i.test(this.sticker);
+    const isCustomPng = customPngStickers.some((s) => s.name === this.sticker);
+    const isBuiltInPng = pngStickers.some((s) => s.name === this.sticker);
+
+    // If it's a PNG sticker (built-in or custom), use image
+    if (isImageUrl || isBuiltInPng || isCustomPng) {
+      const img = getStickerImage(this.sticker);
+      if (img) {
+        const size = 32;
+        ctx.drawImage(img, this.x - size / 2, this.y - size / 2, size, size);
+      }
     } else {
+      // It's an emoji — just draw the text
       ctx.font = "bold 24px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("🖼️", this.x, this.y);
+      ctx.fillText(this.sticker, this.x, this.y);
     }
   }
 }
